@@ -3,6 +3,7 @@
 
 #include "caretaker.h"
 #include "originator.h"
+#include "worksave.h"
 
 #include <QDoubleSpinBox>
 #include <QKeyEvent>
@@ -10,6 +11,11 @@
 #include <QProgressBar>
 #include <QPushButton>
 #include <QTextEdit>
+#include<QFileDialog>
+#include<QSettings>
+#include<QCheckBox>
+#include<QEvent>
+
 
 namespace Ui {
 class MainWindow;
@@ -33,15 +39,21 @@ public:
     QTextEdit* te_value;
     QPushButton* pb_undo;
     QPushButton* pb_redo;
+    QPushButton* pb_save;
+    QPushButton* pb_import;
 
     QStringList list_name;
     QStringList list_value;
     QStringList list_data;
     QStringList list_num;
+    QStringList list_size;
+    QStringList list_itemsum;
     QProgressBar* prob;
     QDoubleSpinBox* dspinbox;
+    QCheckBox* cb_autosave;
 
     QString maincontent="";
+    QString newdata="";
 
     void initui();
 
@@ -60,6 +72,19 @@ public:
     int redocishu=0;
     bool isundo=false;
 
+    void initregedittable();
+    void oncopylastline();
+
+    void moveCursorUp();
+    void moveCursorDown();
+    void moveCursorLeft();
+    void moveCursorRight();
+    void moveCursorStart();
+    void moveCursorEnd();
+    void initTextDataEdit();
+    QString FilterTextHeadData(QString te);
+    void insertHeadData();
+    WorkSave* wsave;
 
 public slots:
     void onconvert();
@@ -69,9 +94,15 @@ public slots:
     void ontranslate();
     void onredo();
     void onundo();
+    void onsave();
+    void onimport();
+    void ontextchanged();
+    void oncheckboxautosave(int state);
+
 
 protected:
     void keyPressEvent(QKeyEvent* event);
+    bool eventFilter(QObject* obj,QEvent* event);
 
 
 

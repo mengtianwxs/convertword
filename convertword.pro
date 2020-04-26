@@ -29,13 +29,15 @@ SOURCES += \
         main.cpp \
         mainwindow.cpp \
     memento.cpp \
-    originator.cpp
+    originator.cpp \
+    worksave.cpp
 
 HEADERS += \
         mainwindow.h \
     memento.h \
     caretaker.h \
-    originator.h
+    originator.h \
+    worksave.h
 
 FORMS += \
         mainwindow.ui
