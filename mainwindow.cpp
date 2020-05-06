@@ -18,7 +18,7 @@ MainWindow::MainWindow(QWidget *parent) :
     initui();
      wsave=new WorkSave;
     initMementoMode();
-//    initregedittable();
+    initregedittable();
     initTextDataEdit();
 
 
@@ -44,6 +44,7 @@ void MainWindow::initui()
     pb_import=ui->pushButton_import;
 
     te_data=ui->te_data;
+    te_data->setObjectName("tedata");
     te_name=ui->te_name;
     te_value=ui->te_value;
     cb_autosave=ui->cb_autosave;
@@ -94,6 +95,19 @@ void MainWindow::initui()
 
 void MainWindow::keyPressEvent(QKeyEvent *event)
 {
+    //变更g后的配电箱尺寸大小
+    if(event->key()==Qt::Key_F2){
+//        isPressF2=true;
+       alterGSize();
+
+
+    }
+
+//    if(event->key()==Qt::Key_G){
+//        isPressF2=true;
+//        qDebug()<<"ff";
+//    }
+
     if(event->modifiers()==Qt::ControlModifier){
 
 
@@ -188,6 +202,14 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
 
 }
 
+void MainWindow::keyReleaseEvent(QKeyEvent *event)
+{
+//    if(event->key()==Qt::Key_F2){
+//        isPressF2=false;
+//    }
+
+}
+
 bool MainWindow::eventFilter(QObject *obj, QEvent *event)
 {
     if(obj==te_data){
@@ -196,6 +218,9 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
             if(key->key()==Qt::Key_Return){
                 moveCursorToEnd(te_data);
                insertHeadData();
+               gx=0;
+               gnum=0;
+                ngnum=0;
                 return true;
 
             }
@@ -224,13 +249,16 @@ void MainWindow::moveCursorToEnd(QTextEdit *te)
 
 void MainWindow::initregedittable()
 {
-    QString strPath=QDir::currentPath();
-    strPath.replace("/","\\");
-    qDebug()<<strPath;
-    QCoreApplication::setOrganizationName("convertword");
-    QCoreApplication::setApplicationName("shell\\open\\command");
-    QSettings* set=new QSettings("HKEY_CLASSES_ROOT\\convertword\\shell\\open\\command\\",QSettings::NativeFormat);
-    set->setValue("Default",strPath+"\\convertword.exe " +"%1");
+
+
+//
+    QString rootAddr="HKEY_CURRENT_USER\\Software\\Classes";
+    QString appPath="C:\\Program Files (x86)\\convertword\\convertword.exe";
+    QSettings setRegedit(rootAddr,QSettings::NativeFormat);
+    setRegedit.setValue("/convertword/Shell/Open/Command/.",appPath+" \"%1\"");//用此应用打开
+    setRegedit.setValue("/convertword/DefaultIcon/.",appPath+",0");//默认图标
+    setRegedit.setValue("/.conw/OpenWithProgIds/convertword","");//默认关联格式
+    setRegedit.sync();
 
 }
 
@@ -251,6 +279,48 @@ void MainWindow::oncopylastline()
 
 //    qDebug()<<newlastline;
     te_data->insertPlainText(newlastline);
+
+}
+
+void MainWindow::alterGSize()
+{
+
+    gx=gx+1;
+     datc=te_data->textCursor();
+    QStringList lgsize;
+    lgsize.append("600*800*200");
+    lgsize.append("500*600*200");
+    lgsize.append("800*1000*200");
+    lgsize.append("400*500*200");
+    lgsize.append("600*800*250");
+    lgsize.append("600*1200*300");
+
+    if(gnum<lgsize.length()-1){
+          gnum=gnum+1;
+    }
+    else{
+        gnum=0;
+    }
+
+
+    if(gx==1){
+
+         datc.insertText(lgsize[0]);
+    }
+
+
+    if(gnum==0){
+        ngnum=lgsize.length()-1;//上一序号
+    }else{
+        ngnum=gnum-1;
+    }
+//    qDebug()<<gnum<<ngnum<<lgsize[gnum]<<"gnum";
+
+    datc.movePosition(QTextCursor::Left,QTextCursor::KeepAnchor,lgsize[ngnum].length());
+    te_data->setTextCursor(datc);
+    datc.removeSelectedText();
+      datc.insertText(lgsize[gnum]);
+
 
 }
 
@@ -294,6 +364,7 @@ void MainWindow::initTextDataEdit()
 QString MainWindow::FilterTextHeadData(QString te)
 {
 
+               //filer 1>>> et.
     QRegExp exp4("[9-1][9-0]?[9-0]?[9-0]?[9-0]?[9-0]?>>>");
     return te.replace(exp4,"");
 }
@@ -302,18 +373,11 @@ void MainWindow::insertHeadData()
 {
     te_data->insertPlainText("\n");
      int pdxnum=te_data->toPlainText().split("\n").length();
-     qDebug()<<pdxnum;
+//     qDebug()<<pdxnum;
 //                QString nd=FilterTextHeadData(te_data);
       te_data->insertPlainText(QString::number(pdxnum)+">>>");
       moveCursorToEnd(te_data);
 }
-
-//void MainWindow::initTextDataEdit()
-//{
-//    te_data->insertPlainText("1>>\b");
-//}
-
-
 
 void MainWindow::onconvert()
 {
@@ -406,6 +470,7 @@ void MainWindow::onparse()
     format.setBorderStyle(QXlsx::Format::BorderThin);
     format.setHorizontalAlignment(QXlsx::Format::AlignHCenter);
 
+
     xlsx.write("A1","序号",format);
     xlsx.write("B1","编号",format);
     xlsx.write("C1","单位",format);
@@ -487,6 +552,8 @@ void MainWindow::onreset()
     list_name.clear();
     list_num.clear();
     list_value.clear();
+    gx=0;
+    gnum=0;
     initTextDataEdit();
      te_data->setFocus();
 }
@@ -497,8 +564,10 @@ void MainWindow::ontranslate()
     QString data=te_data->toPlainText();
     QStringList listnewdata;
     QStringList listhead;
-    QStringList listbody;
+   QStringList listbody;
     QStringList listend;
+
+
 
     //分离
     if(data.contains("=")){
@@ -554,7 +623,7 @@ void MainWindow::ontranslate()
 
     }
 
-    qDebug()<<listhead<<listbodynew<<listend<<"##";
+//    qDebug()<<listhead<<listbodynew<<listend<<"##";
 
     //combine
     int o=listhead.length();
@@ -568,17 +637,12 @@ void MainWindow::ontranslate()
     }
     QString laststr=lastdata.join("\n");
 
-
-
-
-
-
     te_data->setText(laststr);
 
 
      newdata=FilterTextHeadData(laststr);
 
-qDebug()<<newdata<<"new";
+//qDebug()<<newdata<<"new";
     ////////////////////////备忘录/////////////////
     maincontent=data;
     Ori->setContent(maincontent);
@@ -609,7 +673,7 @@ void MainWindow::onredo()
             redonum=mnum-1;
         }
 
-        qDebug()<<"redonum"<<redonum;
+//        qDebug()<<"redonum"<<redonum;
 
       Ori->restoreMemento(Car->getMemento(redonum));
        te_data->setText(Ori->getContent());
@@ -635,7 +699,7 @@ void MainWindow::onundo()
     Ori->restoreMemento(Car->getMemento(undonum));
     te_data->setText(Ori->getContent());
 
-    qDebug()<<"undonum"<<undonum<<"undocishu"<<undocishu;
+//    qDebug()<<"undonum"<<undonum<<"undocishu"<<undocishu;
 
     redocishu=0;
 

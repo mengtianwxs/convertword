@@ -48,12 +48,20 @@ public:
     QStringList list_num;
     QStringList list_size;
     QStringList list_itemsum;
+
+
     QProgressBar* prob;
     QDoubleSpinBox* dspinbox;
     QCheckBox* cb_autosave;
 
     QString maincontent="";
     QString newdata="";
+
+    int gnum=0;
+    bool isPressF2=false;
+    int gx=0;
+     int ngnum=0;
+     QTextCursor datc;
 
     void initui();
 
@@ -74,6 +82,7 @@ public:
 
     void initregedittable();
     void oncopylastline();
+    void alterGSize();
 
     void moveCursorUp();
     void moveCursorDown();
@@ -102,6 +111,7 @@ public slots:
 
 protected:
     void keyPressEvent(QKeyEvent* event);
+    void keyReleaseEvent(QKeyEvent* event);
     bool eventFilter(QObject* obj,QEvent* event);
 
 
